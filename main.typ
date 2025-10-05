@@ -4,6 +4,8 @@
 
 #let todo-inline = todo.with(position: "inline", stroke: (paint: red, thickness: 4pt, cap: "round"))
 
+#set math.cases(gap: 0.8em)
+
 #show: elsearticle.with(
   title: [Implementación de modelo de neurona \
   _Leaky integrate-and-fire_ mediante VCSEL],
@@ -98,6 +100,26 @@ Un sistema que implemente un modelo de neurona LIF debe tener las siguientes pro
 
 = Equivalencia entre descripciones matemáticas
 
-#todo-inline("poner aca los cambios de variables que hice en el cuaderno")
+$
+  cases(
+  (dif n_a)/(dif t) &= -Gamma_a g_a (n_a - n_(a 0))(N_(p h)-phi.alt(t))/V_a-n_a/tau_a + (I_a+i_e (t))/(e V_a),
+  (dif n_s)/(dif t) &= -Gamma_s g_s (n_s - n_(s 0))(N_(p h)/V_s)-n_s/tau_s + I_s/(e V_s),
+  (dif N_(p h))/(dif t) &= (Gamma_a g_a (n_a - n_(a 0)) + Gamma_s g_s (n_s - n_(s 0)) -1/tau_(p h)) N_(p h) + V_a beta B_r n_a^2
+  ) 
+$ <eq:anexo_a_nahmias_original>
+
+Se aplica un cambio de variables a la ecuación #ref(<eq:anexo_a_nahmias_original>):
+
+$
+  cases(
+    u &= t/tau_(p h),
+    G(u)&=tau_(p h) Gamma_a g_a (n_a (t)-n_(a 0)) &= tau_(p h) Gamma_a g_a (n_a (u tau_(p h))-n_(a 0)),
+    Q(u)&=tau_(p h) Gamma_s g_s (n_(s 0)-n_s (t)) &= tau_(p h) Gamma_s g_s (n_(s 0)-n_s (u tau_(p h))),
+    I(u) &= (tau_a Gamma_a g_a) /V_a N_(p h)(t) &= (tau_a Gamma_a g_a) /V_a N_(p h)(u tau_(p h))
+  )
+$ <eq:anexo_a_cambio_variable>
+
+Reemplazando #ref(<eq:anexo_a_cambio_variable>) en #ref(<eq:anexo_a_nahmias_original>):
+
 
 #bibliography("refs.bib")
