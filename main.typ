@@ -73,14 +73,14 @@ of function do not necessarily require an understanding of mechanism" => si anda
 
 = Implementación del modelo Leaky integrate-and-fire en láser VCSEL
 
-Un sistema que implemente un modelo de neurona LIF debe tener las siguientes propiedades:
+Un sistema que implemente un modelo de neurona LIF debe cumplir las siguientes condiciones, llamadas _condiciones de excitabilidad_:
 
-+ Una variable $s$, considerada el estado de la neurona, que funcione como integrador con pérdidas de la entrada al sistema.
++ Una variable $s,$ considerada el estado de la neurona, que funcione como integrador con pérdidas de la entrada al sistema.
 + Comparación de $s$ con un valor umbral.
-+ Resititución de $s$ a un valor inicial luego de que alcance el valor umbral.
 + Generación de un pulso cuando $s$ alcance el valor umbral.
++ Resititución de $s$ a un valor inicial luego de que alcance el valor umbral.
 
-Las cuatro propiedades pueden conseguirse con un láser basado en el modelo Yamada de Q-switching pasivo #cite(<Yamada1993>). Éste describe un láser formado por una región activa (región 1) y una región con absorción saturable (región 2). La figura #ref(<fig:lasernahmias>) muestra un esquemático de una implementación en un VCSEL #cite(<Nahmias2013>).
+Las cuatro propiedades pueden conseguirse con un láser basado en el modelo Yamada de Q-switching pasivo #cite(<Yamada1993>). Éste describe un láser formado por una región activa (región a) y una región con absorción saturable (región s). La figura #ref(<fig:lasernahmias>) muestra un esquemático de una implementación en un VCSEL #cite(<Nahmias2013>).
 
 Las ventajas de utilizar un VCSEL incluyen:
  + Pueden fabricarse de forma integrada ocupando poca área.
@@ -93,7 +93,7 @@ Estas características favorecen su escalabilidad, potencialmente permitiendo ge
 ) <fig:lasernahmias>
 
 
-El sistema está descrito por un sistema de 3 ecuaciones diferenciales cuyas variables son la concentración del número de fotones $S$ y las densidades de electrones en el medio activo y en el absorbente saturable ($N_1$ y $N_2$ respectivamente): 
+El sistema está descrito por un sistema de 3 ecuaciones diferenciales cuyas variables son la concentración del número de fotones $N_(p h)$ y las densidades de electrones en el medio activo y en el absorbente saturable ($n_a$ y $n_s$ respectivamente): 
 // Ecuaciones Yamada, no poner
 // $
 //   cases(
@@ -125,6 +125,7 @@ donde
 / $I_(a,s)$: corriente de bombeo constante en la región (a,s).
 / $i_e (t)$: corriente de bombeo variable en la región a.
 
+#todo-inline([agregar $beta, B_r$, sacar $C$, Y PONER $theta(U)$])
 
 Aplicando el cambio de variable de las ecuaciones #ref(<eq:cambio_variable_nahmias>) se obtiene la descripción equivalente del sistema de la ecuaciones #ref(<eq:nahmias_bonitas>)
 
@@ -139,9 +140,9 @@ $ <eq:cambio_variable_nahmias>
 
 $
   cases(
-    dot(I)(u) &=gamma_I [G(u) - Q(u) -1] I(t) + epsilon.alt f(u),
-    dot(G)(u)&=gamma_G [A-G(u) - G(u)I(u)],
-    dot(Q)(u)&=gamma_Q [B-Q(u) - Q(u)I(u)],
+    dot(I)(u) &=gamma_I [G(u) - Q(u) -1] I(u) + epsilon.alt f(G),
+    dot(G)(u)&=gamma_G [A-G(u) - G(u)I(u)] + theta(u),
+    dot(Q)(u)&=gamma_Q [B-Q(u) - a Q(u)I(u)],
   )
 $ <eq:nahmias_bonitas>
 
@@ -149,24 +150,96 @@ donde:
 #nonumeq(
 $
   G &prop "Ganancia de la región "a"." \
-  Q &prop "Pérdidas de la región "s"." \
-  I &prop "Potencia de salida del láser."
+  Q &prop "Absorción de la región "s"." \
+  I &prop "Potencia de salida del láser."\
+  gamma_G & = tau_(p h)/tau_a\
+  gamma_Q & = tau_(p h)/tau_s\
+  gamma_I &= 1\
+  A &= A(I_A)\
+  B &= B(I_S)\
+  epsilon.alt f(u) &approx 0
+
 $
 )
+
+== Cumplimiento de condiciones de excitabilidad
+
+=== Integración con pérdidas de la entrada al sistema en $G(u)$
+
+En estado estacionario #footnote[El sistema se encuentra en estado estacionario si $theta(u) approx 0$ desde hace un tiempo #box[$T >> tau_(a), tau_(s), tau_(p h)$] ] el sistema se encuentra en un equilibrio estable. Por diseño, $G_(e q) -Q_(e q) -1<0$ y además $epsilon.alt f(G) approx 0$ por lo que $I(u) " es una exponencial decreciente que tiende a" 0$. 
+
+$ 
+  => cases(
+    I(u) &= I_(e q) &approx 0,
+    G(u) &= G_(e q) &= A,
+    Q(u) &= Q_(e q) &= B,
+  )
+$
+
+Como $I(u) approx 0$ y teniendo en cuenta la forma original de la ecuación #ref(<eq:nahmias_bonitas>), $G(u)$ y $Q(u)$ se encuentran desacopladas. Además, $tau_(a) >> tau_(s), tau_(p h)$ por lo que la respuesta de $G(u)$ ante perturbaciones es ordenes de magnitud más lenta que la de $Q(u)$ y $I(u)$. Por estos motivos, se puede considerar que $Q(u)$ y $I(u)$ se mantienen aproximadamente constantes incluso si la región $a$ recibe perturbaciones #box[$theta(u) != 0$], y que $G(u)$ funciona como un integrador de $theta(u)$ con pérdidas:
+
+$ 
+  => cases(
+    I(u) &= I_(e q) approx 0,
+    dot(G)(u) &= gamma_G [A - G(u) - G(u)I(u)] + theta(u),
+    Q(u) &= Q_(e q) = B,
+  )
+$<eq:din_subthreshold>
+
+Si se considera a G como el estado de la neurona, se cumple la condición de excitabilidad 1 (integración con pérdidas de la entrada al sistema).
+
+Esta dinámica se mantiene siempre y cuando se cumpla que #box[$G(u) - Q(u) - 1 > 0$] $<=> G(u) < Q(u) + 1$ ya que $dot(I) approx gamma_I [G(u) -Q(u)-1]$. Se define
+$
+  G_(t h) = Q_(e q) + 1 = B +1
+$
+
+En caso de que $theta(u)$ sea una señal pulsada, $G(u)$ toma la forma que se ilustra en la figura #ref(<fig:GQI_pulso>) entre 0 y 120 unidades de tiempo.
+
+
+
+=== Generación de un pulso en $I(u)$ cuando $G(u) >= G_(t h)(u)$
+
+En caso de que $theta(u)$ la suficiente cantidad de pulsos lo suficientemente cerca, ocurre que $G(u)>= G_(t h)$ por lo que $I(u)$ crece exponencialmente. Esto resulta en una caída de $G(u)$ y $Q(u)$ (pérdida de ganancia y saturación de absorción). El pulso llega a su potencia máxima cuando $Q(u) approx 0$. Debido al decaimiento de $G(u)$ y $Q(u)$, eventualmente se deja de cumplir que el exponente de $I(u),$ #box[$G(u) -Q(u) -1$] deja de ser positivo y nuevamente es negativo, por lo que $I(u)$ decae con una constante de tiempo $approx 1/gamma_I$. De esta forma, se genera un pulso. (ver figura #ref(<fig:GQI_pulso>) entre 120 y 140 unidades de tiempo).
+
+Por lo tanto, se cumplen las condiciones de excitabilidad 2 y 3 (comparación del estado de la neurona con un valor umbral y  generación de un pulso en respuesta).
+
+=== Restitución de $G(u)$ a un valor inicial luego del pulso de $I(u)$
+
+Luego de generar un pulso, $I(u) -> 0$. Por lo tanto, nuevamente $G(u)$ y $Q(u)$ pueden considerarse como variables con dinámicas desacopladas. El sistema se comporta como:
+
+$
+  &cases(
+    I(u) approx 0,
+    dot(G)(u)&=gamma_G [A-G(u)] + theta(u),
+    dot(Q)(u)&=gamma_Q [B-Q(u)],
+  )\
+  => 
+  &cases(
+    G(u)->G_(e q) = A,
+    Q(u)->Q_(e q) = B,
+  )
+$
+
+Notar que como $gamma_G << gamma_I, gamma_Q$, $G(u)$ tarda más tiempo en reestablecerse a su valor de equilibrio que $Q(u)$. Esto dificulta que ocurra un segundo pulso porque temporalmente se cumpla que $G(u) > G_(t h) = Q(u)+1$ antes de que el sistema vuelva al equilibrio.#footnote([En redes neuronales, el periodo inmediatamente posterior a un disparo en el cual es improbable (pero no imposible) que se ocurra un disparo es conocido como _periodo refractario relativo_. También existe el concepto de _periodo refractario absoluto_, en el cual es imposible que se genere un disparo, pero no está contemplado en la implementación del modelo neuronal LIF de #cite(<Nahmias2013>).]).
+
+
+#figure(
+  image("images/pulso_QIG_nahmias.PNG"),
+  caption: [Generación de disparo (obtenido de #ref(<Nahmias2013>)).]
+)<fig:GQI_pulso>
+
 
 #todo-inline([
   - #strike([Ecuaciones originales de #cite(<Nahmias2013>)])
   - Cambio de variable a sistema G, I, Q, 
-    - explicar el significado mas o menos de las tres variables referencias
-      - $I prop P$ (o a cantidad de fotones en la cavidad, es lo mismo?)
-      - $G prop (n_a - n_(a 0))$
-      - $Q prop (n_(s 0) - n_s)$
     - referenciar al anexo donde esta hecho el cambio de variable en mas detalle si es que tengo tiempo
   - Paso a paso de como se genera el pulso ("explicar la ecuacion diferencial en palabras" ponele)
   - Poner la ecuacion de G e I simplificada que es identica a la de leaky integrate and fire (incluyendo el pulso en I y el reset de G)
   - Describir explicitamente como es que cumple las condiciones de excitabilidad mencionadas anteriormente
   - Grafico basico de como manda un unico pulso en I y como se resetea G y Q
 ])
+
+
 
 
 
