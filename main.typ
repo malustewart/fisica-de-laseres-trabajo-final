@@ -29,12 +29,15 @@
       // corr: "maria.stewart@ib.edu.ar",
     ),
   ),
+  numcol: 1,
   // journal: "Name of the Journal",
   // abstract: abstract,
   // keywords: ("keyword 1", "keyword 2"),
   format: "review",
   // line-numbering: true,
 )
+#outline()
+
 #todo-inline[Cambiar de Figure a figura]
 = Introducción
 
@@ -45,7 +48,7 @@
   - Ejemplo HW neuromorfico actual? opcional (ponele TrueNorth de IBM)
   - *Como podría mejorarse con fotonica*])
 
-= Todas las cosas de redes neuronales
+= Modelos neuronales
 
 == Spiking Neural Networks (SNN)
 
@@ -69,9 +72,23 @@ of function do not necessarily require an understanding of mechanism" => si anda
 
 #todo-inline("Como es el modelo leaky integrate and fire?")
 
+$
+  cases(
+    dot(s)(t) &= 1/tau_s [s_("rest")-s(t)] + I(t),
+    V(t) &= sum_i^oo delta(t-t_f_i),
+    s(t_f_i) &<-- s_("reset") ,
+  )\
+  "Siendo " t_f_i = t slash.big s(t) >= s_(t h)
+$ <eq:LIF>
+
+#figure(
+  square(fill: red),
+  caption: [Modelo de neurona _leaky integrate-and-fire_ (LIF).]
+)
 
 
-= Implementación del modelo Leaky integrate-and-fire en láser VCSEL
+
+= Implementación del modelo de neurona LIF en láser VCSEL
 
 Un sistema que implemente un modelo de neurona LIF debe cumplir las siguientes condiciones, llamadas _condiciones de excitabilidad_:
 
@@ -81,11 +98,6 @@ Un sistema que implemente un modelo de neurona LIF debe cumplir las siguientes c
 + Resititución de $s$ a un valor inicial luego de que alcance el valor umbral.
 
 Las cuatro propiedades pueden conseguirse con un láser basado en el modelo Yamada de Q-switching pasivo #cite(<Yamada1993>). Éste describe un láser formado por una región activa (región a) y una región con absorción saturable (región s). La figura #ref(<fig:lasernahmias>) muestra un esquemático de una implementación en un VCSEL #cite(<Nahmias2013>).
-
-Las ventajas de utilizar un VCSEL incluyen:
- + Pueden fabricarse de forma integrada ocupando poca área.
- + Pueden fabricarse en gran cantidad de forma interconectada.
-Estas características favorecen su escalabilidad, potencialmente permitiendo generar redes con grandes cantidades de neuronas interconectadas. #todo([Esto queda medio colgado, quizas es mejor ponerlo al final o en otro lado.])
 
 #figure(
   square(fill: red),
@@ -158,9 +170,9 @@ $
   A &= A(I_A)\
   B &= B(I_S)\
   epsilon.alt f(u) &approx 0
-
 $
 )
+#todo-inline([Poner definicion de $a$])
 
 == Cumplimiento de condiciones de excitabilidad
 
@@ -220,7 +232,7 @@ $
   )
 $
 
-Notar que como $gamma_G << gamma_I, gamma_Q$, $G(u)$ tarda más tiempo en reestablecerse a su valor de equilibrio que $Q(u)$. Esto dificulta que ocurra un segundo pulso porque temporalmente se cumpla que $G(u) > G_(t h) = Q(u)+1$ antes de que el sistema vuelva al equilibrio.#footnote([En redes neuronales, el periodo inmediatamente posterior a un disparo en el cual es improbable (pero no imposible) que se ocurra un disparo es conocido como _periodo refractario relativo_. También existe el concepto de _periodo refractario absoluto_, en el cual es imposible que se genere un disparo, pero no está contemplado en la implementación del modelo neuronal LIF de #cite(<Nahmias2013>).]).
+Notar que como $gamma_G << gamma_I, gamma_Q$, $G(u)$ tarda más tiempo en reestablecerse a su valor de equilibrio que $Q(u)$. Esto dificulta que ocurra un segundo pulso porque temporalmente se cumpla que $G(u) > G_(t h) = Q(u)+1$ antes de que el sistema vuelva al equilibrio.#footnote([En el estudio de redes neuronales, el periodo inmediatamente posterior a un disparo en el cual es improbable (pero no imposible) que ocurra otro disparo es conocido como _periodo refractario relativo_. También existe el concepto de _periodo refractario absoluto_, en el cual es imposible que se genere un disparo, pero no está contemplado en la implementación del modelo neuronal LIF de #cite(<Nahmias2013>).])
 
 
 #figure(
@@ -228,45 +240,45 @@ Notar que como $gamma_G << gamma_I, gamma_Q$, $G(u)$ tarda más tiempo en reesta
   caption: [Generación de disparo (obtenido de #ref(<Nahmias2013>)).]
 )<fig:GQI_pulso>
 
+== Comparación de modelo neuronal LIF teórico e implementación en VCSEL
+
+Teniendo en mente que el objetivo es implementar un modelo neuronal:
+
+- Las variables que se relacionan directamente con el comportamiento funcional de la neurona son $G(u)$ y $I(u)$.
+- La codificación de información de la señal $I(u)$ está dada por la posición temporal de los pulsos generados, no por su forma o amplitud.
+- La señal de entrada $theta(u)$ está formada unicamente por pulsos.
+
+Bajo estas consideraciones, el sistema de ecuación #ref(<eq:nahmias_bonitas>) es funcionalmente equivalente a #ref(<eq:LIF_VCSEL>):
+
+$
+  cases(
+    dot(G)(u) &= gamma_G [A-G(u)] + theta(u),
+    I(u) &= sum_i^oo delta(u-u_f_i),
+    G(u_f_i) &<-- A ,
+  )\
+  "Siendo " u_f_i = u slash.big G(u) >= B+1
+$ <eq:LIF_VCSEL>
+
 
 #todo-inline([
-  - #strike([Ecuaciones originales de #cite(<Nahmias2013>)])
   - Cambio de variable a sistema G, I, Q, 
     - referenciar al anexo donde esta hecho el cambio de variable en mas detalle si es que tengo tiempo
-  - Paso a paso de como se genera el pulso ("explicar la ecuacion diferencial en palabras" ponele)
-  - Poner la ecuacion de G e I simplificada que es identica a la de leaky integrate and fire (incluyendo el pulso en I y el reset de G)
-  - Describir explicitamente como es que cumple las condiciones de excitabilidad mencionadas anteriormente
-  - Grafico basico de como manda un unico pulso en I y como se resetea G y Q
+  - decir algo sobre si $theta (u)$ es optico vs electrico
 ])
 
+== Interconexión de neuronas VCSEL
 
-
+Las ventajas de utilizar un VCSEL incluyen:
+ + Pueden fabricarse de forma integrada ocupando poca área.
+ + Pueden fabricarse en gran cantidad de forma interconectada.
+Estas características favorecen su escalabilidad, potencialmente permitiendo generar redes con grandes cantidades de neuronas interconectadas. #todo([Esto queda medio colgado, quizas es mejor ponerlo al final o en otro lado.])
 
 
 #todo-inline([ Mostrar al menos uno de los resultados avanzados del paper, tipo el de reconocimiento de patrones])
 
-#todo-inline([repasar los apuntes de clase de los VCSEL. En algun lado mencionar el potencial de los VCSEL de hacerse integrados y poder tener muchas neuronas en un mismo chip integrado])
-
-#todo-inline([por que absorbente saturable?])
-
-
 #show: appendix
 
 = Equivalencia entre descripciones matemáticas
-
-$
-  cases(
-  (dif n_a)/(dif t) &= -Gamma_a g_a (n_a - n_(a 0))(N_(p h)-phi.alt(t))/V_a-n_a/tau_a + (I_a+i_e (t))/(e V_a),
-  (dif n_s)/(dif t) &= -Gamma_s g_s (n_s - n_(s 0))(N_(p h)/V_s)-n_s/tau_S + I_s/(e V_s),
-  (dif N_(p h))/(dif t) &= (Gamma_a g_a (n_a - n_(a 0)) + Gamma_s g_s (n_s - n_(s 0)) -1/tau_(p h)) N_(p h) + V_a beta B_r n_a^2
-  ) 
-$ <eq:anexo_a_nahmias_original>
-
-Se aplica un cambio de variables a la ecuación #ref(<eq:anexo_a_nahmias_original>):
-
-
-
-Reemplazando #ref(<eq:cambio_variable_nahmias>) en #ref(<eq:anexo_a_nahmias_original>):
 
 #todo-inline("TERMINAR EL ANEXO O BORRAR")
 
