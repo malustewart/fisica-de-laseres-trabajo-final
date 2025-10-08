@@ -45,8 +45,6 @@
   #pause
   - Mejoras de costo energético/latencia en redes neuronales artificiales grandes comparado con arquitecturas tradicionales (CPU / GPU).
   #pause
-  - Fotónica: gran ancho de banda, paralelismo, potencial eficiencia comparado con electrónica.
-  #pause
   - Arreglos de VCSEL: integración densa y fabricación a escala ⇒ red de neuronas en chip
 ]
 
@@ -169,7 +167,7 @@ $
     [
       $
         cases(
-          dot(I) &=gamma_I [G  - Q  -1] I  + epsilon.alt f(G),
+          dot(I) &=gamma_I [G  - Q  -1] I,
           dot(G) &=gamma_G [A-G  - G I ] + theta "         ",
           dot(Q) &=gamma_Q [B-Q  - a Q I ],
         )\
@@ -177,7 +175,7 @@ $
         arrow.b.double\
         cases(
           I  &= I_(e q) approx 0,
-          dot(G)  &= gamma_G [A - G  - G I ] + theta ,
+          dot(G)  &= gamma_G [A - G] + theta ,
           Q &= Q_(e q) = B,
         )
       $
@@ -194,7 +192,7 @@ $
   [
     $
       cases(
-        dot(I)&=gamma_I [G - Q -1] I + epsilon.alt f(G),
+        dot(I)&=gamma_I [G - Q -1] I,
         dot(G)&=gamma_G [A-G - G I] + theta"         ",
         dot(Q)&=gamma_Q [B-Q - a Q I],
       )\
@@ -220,7 +218,7 @@ $
     [
       $
         cases(
-          dot(I) &=gamma_I [G  - Q  -1] I  + epsilon.alt f(G),
+          dot(I) &=gamma_I [G  - Q  -1] I,
           dot(G) &=gamma_G [A-G  - G I ] + theta "         ",
           dot(Q) &=gamma_Q [B-Q  - a Q I ],
         )\
@@ -228,7 +226,7 @@ $
         arrow.b.double\
         cases(
           I  &= I_(e q) approx 0,
-          dot(G)  &= gamma_G [A - G  - G I ] + theta ,
+          dot(G)  &= gamma_G [A - G] + theta ,
           Q &= Q_(e q) = B,
         )
       $\
@@ -236,33 +234,6 @@ $
     ]
   )
 ]
-
-
-// #slide(title: "Implementación de modelo LIF en un VCSEL")[
-
-//   #grid(columns:(1fr,1fr), align:(left, center),
-//     [
-//       #image("images/pulso_QIG_nahmias.PNG", height: 70%)
-//     ],
-//     [
-//       $
-//         cases(
-//           dot(I) &=gamma_I [G  - Q  -1] I  + epsilon.alt f(G),
-//           dot(G) &=gamma_G [A-G  - G I ] + theta "         ",
-//           dot(Q) &=gamma_Q [B-Q  - a Q I ],
-//         )\
-//         #pause
-//         arrow.b.double\
-//         cases(
-//           I  &= I_(e q) approx 0,
-//           dot(G)  &= gamma_G [A - G  - G I ] + theta ,
-//           Q &= Q_(e q) = B,
-//         )
-//       $\
-//     $("Recordar que " 1/gamma_I << 1/gamma_Q << 1/gamma_G)$
-//     ]
-//   )
-// ]
 
 #slide(title: "Implementación de modelo LIF en un VCSEL")[
 == Repaso de condiciones necesarias para implementaciones de modelo LIF
