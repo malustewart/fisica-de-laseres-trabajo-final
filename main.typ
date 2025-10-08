@@ -46,16 +46,16 @@
 
 = Introducción
 
-Las redes neuronales artificiales son con un modelo computacional muy utilizado en el área de inteligencia artificial cuya estructura tiene paralelismos con las redes neuronales biológicas. Está formadas por pequeñas unidades de computo llamadas neuronas artificiales que, en mayor o menor medida, tienen un funcionamiento similar a una neurona biológica. Tienen una gran variedades de aplicaciones, como por ejemplo reconocimiento de voz, generación y procesamiento de imágenes y traducción entre idiomas.
+Las redes neuronales artificiales son un modelo computacional muy utilizado en el área de inteligencia artificial cuya estructura tiene paralelismos con las redes neuronales biológicas. Están formadas por pequeñas unidades de computo llamadas neuronas artificiales que, en mayor o menor medida, tienen un funcionamiento similar a una neurona biológica. Tienen una gran variedad de aplicaciones, como por ejemplo reconocimiento de voz, generación y procesamiento de imágenes y traducción entre idiomas.
 
-El tamaño de las redes neuronales artificales ha ido creciendo rápidamente en los últimos años, 
-#footnote([Tomar como ejemplo las redes neuronales artificales GPT de OpenAI: en 2019 publicaron GPT-2, un modelo con 1500 millones de parámetros, y tan solo 4 años después lanzaron GPT-4, un modelo que se estima que tiene 1.76 billones de parámetros (la cantidad de parámetros es aproximadamente equivalente a la cantidad de conexiones neuronales).])
-y en consecuencia su funcionamiento es cada vez mas computacionalmente costoso. Esta es una de las grandes motivaciones del área de investigación de _hardware neuromorfico_: procesadores de arquitecturas que se asemejen al de las redes neuronales de forma tal de poder ejecutarlas más rápidamente y/o más eficiente energéticamente. Mientras que estos sistemas suelen ser electrónicos (ver por ejemplo #cite(<ODIN>)), una rama del desarrollo del hardware neuromorfico investiga implementaciones fotónicas. Se describe a continuación un desarrollo de un VCSEL que implementa un modelo de neurona artificial.
+El tamaño de las redes neuronales artificiales ha ido creciendo rápidamente en los últimos años, 
+#footnote([Tomar como ejemplo las redes neuronales artificiales GPT de OpenAI: en 2019 publicaron GPT-2, un modelo con 1500 millones de parámetros, y tan solo 4 años después lanzaron GPT-4, un modelo que se estima que tiene 1.76 billones de parámetros (la cantidad de parámetros es aproximadamente equivalente a la cantidad de conexiones neuronales).])
+y en consecuencia su funcionamiento es cada vez más computacionalmente costoso. Esta es una de las grandes motivaciones del área de investigación de _hardware neuromórfico_: procesadores con arquitecturas que se asemejen al de las redes neuronales de forma tal de poder ejecutarlas más rápidamente y/o más eficientemente en términos energéticos. Mientras que estos sistemas suelen ser electrónicos (ver por ejemplo #cite(<ODIN>)), una rama del desarrollo del hardware neuromorfico investiga implementaciones fotónicas. Se describe a continuación un desarrollo de un VCSEL que implementa un modelo de neurona artificial.
 
 
 = Modelos neuronales
 
-Las neuronas (figura #ref(<fig:neurona>)), son células del sistema nervioso que intercambian información a través de señales eléctricas.
+Las neuronas (figura #ref(<fig:neurona>)) son células del sistema nervioso que intercambian información a través de señales eléctricas.
 #figure(
   image("images/neurona.svg", width: 70%),
   caption: [Diagrama de una neurona. (#cite(<Neuron>))]
@@ -79,17 +79,17 @@ Es de sumo interés para la neurociencia comprender la relación entre las seña
 
 Los modelos neuronales en donde se considera a las entradas y salidas como una sumatoria de pulsos distribuidos en el tiempo son la base de las redes neuronales artificiales de impulsos, o _Spiking Neuronal Networks_ (SSN) #cite(<Maass1997>). En estas redes, el único intercambio que ocurre entre neuronas es el de pulsos de igual amplitud en diferentes momentos. Se puede interpretar como que las señales entre neuronas son analógicas en el tiempo y digitales en amplitud.
 
-Un ejemplo de este modelo es el  _Leaky Integrate-and-Fire_ (LIF) #cite(<Abbott1999>), descrito por el sistema de ecuaciones #ref(<eq:LIF>). La variable $s(t),$ comunmente denominada el _estado de la neurona_, funciona como un integrador con pérdidas de $x(t)$ (la entrada a la neurona). $s(t)$ es continuamente comparada con un valor umbral $s_(t h)$. Cuando $s(t) > s_(t h)$, se genera un pulso en la salida $y(t)$ y $s(t)$ se reestablece a un valor de reposo $s_("rest")$.
+Un ejemplo de este modelo es el  _Leaky Integrate-and-Fire_ (LIF) #cite(<Abbott1999>), descrito por el sistema de ecuaciones #ref(<eq:LIF>). La variable $s(t),$ comúnmente denominada el _estado de la neurona_, funciona como un integrador con pérdidas de $x(t)$ (la entrada a la neurona). $s(t)$ es continuamente comparada con un valor umbral $s_(t h)$. Cuando $s(t) > s_(t h)$, se genera un pulso en la salida $y(t)$ y $s(t)$ se restablece a un valor de reposo $s_("rest")$.
 
 
 $
   cases(
     dot(s)(t) = 1/tau_s [s_("rest")-s(t)] + x(t),
     y(t) = sum_i^oo delta(t-t_f_i),
-    s(t_f_i + dif t) = s_("reset") ,
+    s(t_f_i^+) = s_("rest") ,
   )
 $ <eq:LIF>
-Siendo $t_f_i = t slash.big s(t) >= s_(t h),$ es decir, los tiempos en los que $s(t)$ supera el valor umbral $s_(t h)$ (también llamados _tiempos de disparos_).
+Siendo $t_f_i = t$ tal que $s(t) >= s_(t h),$ es decir, los tiempos en los que $s(t)$ supera el valor umbral $s_(t h)$ (también llamados _tiempos de disparos_).
 
 #figure(
   image("images/LIF.PNG", width: 50%),
@@ -97,7 +97,7 @@ Siendo $t_f_i = t slash.big s(t) >= s_(t h),$ es decir, los tiempos en los que $
   caption: [Modelo de neurona _Leaky Integrate-and-Fire_ (LIF). #cite(<LIF>)\
   Curva roja: el estado de la neurona $s(t)$\
   Flechas rojas: pulsos de entrada a la neurona $x(t)$\
-  Fecha verde: pulso de salida de la neurona y(t)\
+  Flecha verde: pulso de salida de la neurona y(t)\
   #v(10pt)
   ]
 )<fig:LIF>
@@ -111,7 +111,7 @@ Un sistema que implemente un modelo de neurona LIF debe cumplir las siguientes c
 + Una variable $s,$ considerada el estado de la neurona, que funcione como integrador con pérdidas de la entrada al sistema.
 + Comparación de $s$ con un valor umbral.
 + Generación de un pulso cuando $s$ alcance el valor umbral.
-+ Resititución de $s$ a un valor inicial luego de que alcance el valor umbral.
++ Restitución de $s$ a un valor inicial luego de que alcance el valor umbral.
 
 Las cuatro propiedades pueden conseguirse con un láser basado en el modelo Yamada de Q-switching pasivo #cite(<Yamada1993>). Éste describe un láser formado por una región activa (región a) y una región con absorción saturable (región s). La figura #ref(<fig:lasernahmias>) muestra un esquemático de una implementación en un VCSEL #cite(<Nahmias2013>).
 
@@ -131,9 +131,9 @@ El sistema está descrito por un sistema de 3 ecuaciones diferenciales cuyas var
 // [
   $
   cases(
-    (dif N_(p h))/(dif t) = [ Gamma_a tilde(G)_a + Gamma_2 tilde(G)_s - 1/tau_(p h)]N_(p h) +  V_1 beta B_r n_a^2,
+    (dif N_(p h))/(dif t) = [ Gamma_a tilde(G)_a + Gamma_s tilde(G)_s - 1/tau_(p h)]N_(p h) +  V_a beta B_r n_a^2,
 
-    (dif n_a)/(dif t) = -(Gamma_1)/V_a tilde(G)_a (N_(p h)-phi.alt(t)) - n_a/tau_a + (I_a+i_e (t))/(e V_a),
+    (dif n_a)/(dif t) = -(Gamma_a)/V_a tilde(G)_a (N_(p h)-phi.alt(t)) - n_a/tau_a + (I_a+i_e (t))/(e V_a),
 
     (dif n_s)/(dif t) = -(Gamma_s)/V_s tilde(G)_s N_(p h) - n_s/tau_s + I_s/(e V_s),
   )
@@ -147,7 +147,7 @@ $)
 // )
 / $g_(a,s)$: Constante de proporcionalidad entre el coeficiente de ganancia y la densidad de electrones en la región $(a,s)$.
 / $Gamma_(a,s)$: Coeficiente de confinamiento de la región $(a,s)$.
-/ $n_((a,s) 0)$: Densidad de electrones umbral a partir de la cual la ganancia de la region (a,s) es positiva.
+/ $n_((a,s) 0)$: Densidad de electrones umbral a partir de la cual la ganancia de la región (a,s) es positiva.
 / $tau_(p h)$: Vida media de un fotón.
 / $tau_(a, s)$: Vida media del estado superior en la región $(a,s)$.
 / $V_(a, s)$: Volumen de la región (a,s).
@@ -181,15 +181,15 @@ $ <eq:nahmias_bonitas>
 $
   G prop "Ganancia de la región "a"." \
   Q prop "Absorción de la región "s"." \
-  I prop "Potencia de salida del láser."\
+  I prop "Intensidad del haz."\
   theta prop "Modulación de ganancia de la región "a"."\
   gamma_G  = tau_(p h)/tau_a\
   gamma_Q  = tau_(p h)/tau_s\
   gamma_I = 1\
   a = (tau_s Gamma_s g_s V_a)/ (tau_a Gamma_a g_a V_s)\
-  A= A(I_A)\
+  A= A(I_a)\
   B= B(I_s)\
-  epsilon.alt f(u) approx 0\
+  epsilon.alt f(G) approx 0\
 $
 )
 
@@ -197,7 +197,7 @@ $
 
 === Integración con pérdidas de la entrada al sistema en $G(u)$
 
-En estado estacionario #footnote[El sistema se encuentra en estado estacionario si $theta(u) approx 0$ desde hace un tiempo #box[$T >> tau_(a), tau_(s), tau_(p h)$] ] el sistema se encuentra en un equilibrio estable. Por diseño, $G_(e q) -Q_(e q) -1<0$ y además $epsilon.alt f(G) approx 0$ por lo que $I(u)$ es una exponencial decreciente que tiende a $0$. 
+En estado estacionario #footnote[El sistema se encuentra en estado estacionario si $theta(u) approx 0$ desde hace un tiempo #box[$T >> tau_(a), tau_(s), tau_(p h)$] ] el sistema se encuentra en un equilibrio estable. Por diseño, $G_(e q) -Q_(e q) -1<0$ por lo que $I(u)$ es una exponencial decreciente que tiende a $0$. 
 
 #nonumeq(
 $ 
@@ -222,19 +222,20 @@ $
 )
 Si se considera a G como el estado de la neurona, se cumple la condición de excitabilidad 1 (integración con pérdidas de la entrada al sistema).
 
-Esta dinámica se mantiene siempre y cuando se cumpla que #box[$G(u) - Q(u) - 1 > 0$] $<=>$ #box[$G(u) < Q(u) + 1$] ya que #box[$dot(I) approx gamma_I [G(u) -Q(u)-1]$]. Se define:
+Esta dinámica se mantiene siempre y cuando se cumpla que #box[$G(u) - Q(u) - 1 > 0$] $<=>$ #box[$G(u) > Q(u) + 1$] ya que #box[$dot(I) approx gamma_I [G(u) -Q(u)-1]$]. Se define:
 #nonumeq(
 $
   G_(t h) = Q_(e q) + 1 = B +1
 $
 )
+Para asegurar que el láser esté en reposo si no es excitado por $theta(u)$, se debe ajustar $G_(t h)$ y $G_"eq"$ para que $G_(t h) =B+1> G_(e q)=A$. B se ajusta modificando $I_s$ y A se ajusta modificando $I_a$.
 En caso de que $theta(u)$ sea una señal pulsada, $G(u)$ toma la forma que se ilustra en la figura #ref(<fig:GQI_pulso>) entre 0 y 120 unidades de tiempo.
 
 
 
 === Generación de un pulso en $I(u)$ cuando $G(u) >= G_(t h)(u)$
 
-En caso de que $theta(u)$ la suficiente cantidad de pulsos lo suficientemente cerca, ocurre que $G(u)>= G_(t h)$ por lo que $I(u)$ crece exponencialmente. Esto resulta en una caída de $G(u)$ y $Q(u)$ (pérdida de ganancia y saturación de absorción). El pulso llega a su potencia máxima cuando $Q(u) approx 0$. Debido al decaimiento de $G(u)$ y $Q(u)$, eventualmente se deja de cumplir que el exponente de $I(u),$ #box[$G(u) -Q(u) -1$] deja de ser positivo y nuevamente es negativo, por lo que $I(u)$ decae con una constante de tiempo $approx 1/gamma_I$. De esta forma, se genera un pulso. (ver figura #ref(<fig:GQI_pulso>) entre 120 y 140 unidades de tiempo).
+En caso de que $theta(u)$ la suficiente cantidad de pulsos lo suficientemente cerca, ocurre que $G(u)>= G_(t h)$ por lo que $I(u)$ crece exponencialmente. Esto resulta en una caída de $G(u)$ y $Q(u)$ (pérdida de ganancia y saturación de absorción). El pulso alcanza su potencia máxima cuando la absorción se satura ($Q(u) approx 0$). Debido al decaimiento de $G(u)$ y $Q(u)$, eventualmente el exponente de $I(u),$ #box[$G(u) -Q(u) -1$] nuevamente es negativo, por lo que $I(u)$ decae con una constante de tiempo $approx 1/gamma_I$. De esta forma, se genera un pulso. (ver figura #ref(<fig:GQI_pulso>) entre 120 y 140 unidades de tiempo).
 
 Por lo tanto, se cumplen las condiciones de excitabilidad 2 y 3 (comparación del estado de la neurona con un valor umbral y  generación de un pulso en respuesta).
 
@@ -279,11 +280,11 @@ $
   cases(
     dot(G)(u) = gamma_G [A-G(u)] + theta(u),
     I(u) = sum_i^oo delta(u-u_f_i),
-    G(u_f_i + dif u) = A ,
+    G(u_f_i^+) = A ,
   )\
 $ <eq:LIF_VCSEL>
 
-Siendo $u_f_i = u slash.big G(u) >= B+1$
+Siendo $u_f_i = u$ tal que $G(u) >= B+1$
 
 El sistema de ecuaciones #ref(<eq:LIF_VCSEL>) es algebraicamente equivalente al del modelo de neurona LIF #ref(<eq:LIF>). Entonces, el VCSEL descrito implementa un modelo neuronal LIF con las siguientes correspondencias:
 
@@ -297,7 +298,9 @@ El sistema de ecuaciones #ref(<eq:LIF_VCSEL>) es algebraicamente equivalente al 
     ),
     $x(t)$,$theta(u)$,
     $s(t)$,$G(u)$,
-    $y(t)$,$I(u)$
+    $y(t)$,$I(u)$,
+    $s_(t h)$, $B+1$,
+    $s_"rest"$, $A$,
   ),
   placement: auto,
   caption: [Correspondencia entre parámetros del modelo LIF y el VCSEL.]
