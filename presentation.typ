@@ -28,7 +28,7 @@
 
 #slide(title: "Temas")[
   - Motivación
-  - Modelo neuronal LIF
+  - Modelo neuronal _Leaky Integrate-and-Fire_
   - Implementación de modelo neuronal LIF con un VCSEL
 ]
 
@@ -277,6 +277,7 @@ $
         $checkmark$ Generar un pulso cuando la integral supere el umbral. \
         $checkmark$ Restablecer el valor de la integral luego de que supere el umbral. \
       ]
+      #math.arrow.double El VCSEL con absobente saturable implementa el modelo neuronal LIF!
     ]
   )
 ]
@@ -293,4 +294,50 @@ $
 
 #slide(title: "References")[
   #bibliography("refs.bib", title: [Referencias])
+]
+
+= Appendix
+
+#focus-slide("Apéndice")
+
+#slide(title: "Ejemplo de redes mínimas")[
+#figure(
+  image("images/bistable.PNG"),
+  caption: [Circuito biestable formado por dos neuronas interconectadas.]
+  )
+]
+
+#slide(title: "Ejemplo de redes mínimas")[
+#figure(
+  grid(columns: (2fr, 3fr),
+    [
+    #image("images/repetidorpatron_neuronas.PNG")
+    ],
+    [
+    #image("images/repetidorpatron_señales.PNG")
+    ]
+  ),
+  caption: [Circuito de 4 neuronas con capacidad de repetir un patrón de pulsos de entrada. @Nahmias2013]
+  )
+]
+
+#slide(title: "Ejemplo de redes mínimas")[
+#figure(
+  grid(columns: (2fr, 3fr),
+    [
+    #image("images/repetidorpatron_neuronas.PNG")
+    ],
+    [
+    #image("images/repetidorpatron_señales.PNG")
+    ]
+  ),
+  caption: [Circuito de 4 neuronas con capacidad de repetir un patrón de pulsos de entrada. @Nahmias2013]
+  )
+]
+
+#slide(title: "Conexiones entre neuronas fotónicas")[
+  #figure(
+  image("images/conexionadoSNN.png"),
+  caption: [Esquemático de conexiones en una SNN fotónica. @Nahmias2013]
+  )
 ]
