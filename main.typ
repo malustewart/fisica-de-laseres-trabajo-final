@@ -280,7 +280,7 @@ $
   cases(
     dot(G)(u) = gamma_G [A-G(u)] + theta(u),
     I(u) = sum_i^oo delta(u-u_f_i),
-    G(u_f_i^+) = A ,
+    G(u_(f_i)^+) = A ,
   )\
 $ <eq:LIF_VCSEL>
 
